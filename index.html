@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Desbloqueie seu Futuro — Corrida pela Aprendizagem</title>
+<style>
+  :root{
+    --bg:#05070d;
+    --panel:#0d1526;
+    --panel2:#152238;
+    --line:#3a5a86;
+    --txt:#f4f8ff;
+    --muted:#a9c1e0;
+    --accent:#ffd24a;
+    --good:#48e08b;
+    --bad:#ff6b6b;
+    --blue:#4fc3ff;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;overflow:hidden;
+    background:var(--bg);color:var(--txt);
+    font-family:"Courier New","Lucida Console",monospace;
+    touch-action:none;
+    user-select:none;
+    -webkit-font-smoothing:none;
+  }
+  #gameCanvas{
+    position:fixed;inset:0;width:100%;height:100%;display:block;
+    background:#0b1020;
+    image-rendering:pixelated;
+    image-rendering:-moz-crisp-edges;
+    image-rendering:crisp-edges;
+    -ms-interpolation-mode:nearest-neighbor;
+  }
+  #overlay{
+    position:fixed;inset:0;pointer-events:none;
+    display:flex;align-items:center;justify-content:center;
+    padding:16px;
+  }
+  .screen{
+    pointer-events:auto;
+    width:min(980px,96vw);
+    max-height:94vh;
+    overflow:auto;
+    background:linear-gradient(180deg,rgba(10,18,34,.98),rgba(4,8,18,.98));
+    border:3px solid #4a6a9a;
+    border-radius:6px;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,.75),
+      inset 0 0 0 2px #0a1525,
+      inset 0 0 0 3px #2a4a72;
+    padding:22px;
+    display:none;
+    position:relative;
+  }
+  .screen.show{display:block;}
+  .screen::before{
+    content:'';position:absolute;inset:6px;
+    border:1px solid rgba(120,170,230,.15);
+    border-radius:3px;pointer-events:none;
+  }
+  h1,h2,h3{line-height:1.15;margin:0 0 12px;font-family:"Courier New",monospace;letter-spacing:1px;}
+  h1{
+    font-size:clamp(24px,4.6vw,52px);
+    color:#ffd24a;
+    text-shadow:
+      2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000,
+      4px 4px 0 rgba(0,0,0,.55);
+    letter-spacing:2px;
+  }
+  h2{
+    font-size:clamp(18px,3vw,30px);color:#6ad4ff;
+    text-shadow:2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  }
+  h3{
+    font-size:clamp(15px,2.2vw,20px);color:#ffd24a;
+    text-shadow:2px 2px 0 #000;
+  }
+  p{line-height:1.5;color:#c8daee;margin:8px 0;}
+  .tag{
+    display:inline-block;padding:4px 10px;border:2px solid #4a6a9a;
+    border-radius:3px;color:#ffd24a;font-size:12px;letter-spacing:2px;
+    text-transform:uppercase;margin-bottom:12px;background:rgba(0,0,0,.5);
+    text-shadow:1px 1px 0 #000;
+  }
+  .btn{
+    pointer-events:auto;cursor:pointer;
+    background:linear-gradient(180deg,#2a4a78,#0e1a2e);
+    color:#e8f0ff;border:2px solid #5a8bc9;border-radius:4px;
+    padding:12px 18px;font-family:"Courier New",monospace;font-weight:bold;
+    font-size:clamp(13px,1.8vw,17px);letter-spacing:1px;
+    box-shadow:
+      0 4px 0 #050a14,
+      inset 0 1px 0 rgba(255,255,255,.2);
+    transition:transform .05s,filter .1s;
+    margin:6px 6px 6px 0;
+    text-shadow:1px 1px 0 #000;
+  }
+  .btn:hover{filter:brightness(1.15);}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #050a14, inset 0 1px 0 rgba(255,255,255,.2);}
+  .btn.primary{
+    background:linear-gradient(180deg,#ffd24a,#c88d00);
+    color:#1a1000;border-color:#ffe89a;
+    text-shadow:1px 1px 0 rgba(255,255,255,.4);
+  }
+  .btn.good{background:linear-gradient(180deg,#2bbd6a,#0d5a2e);border-color:#6ff0a4;}
+  .btn.danger{background:linear-gradient(180deg,#b83b3b,#3a0f0f);border-color:#ff8a8a;}
+  .grid{display:grid;gap:12px;}
+  .grid.carts{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+  .card{
+    background:linear-gradient(180deg,#16283f,#0a1626);
+    border:2px solid #3a5a86;border-radius:4px;padding:14px;cursor:pointer;
+    transition:transform .1s,border-color .1s,filter .1s;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .card:hover{transform:translateY(-2px);border-color:#ffd24a;filter:brightness(1.1);}
+  .card h3{margin-bottom:8px;}
+  .statline{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#a9c1e0;margin:3px 0;letter-spacing:.5px;}
+  .bar{height:8px;background:#030610;border:1px solid #2e4c72;border-radius:2px;overflow:hidden;margin:3px 0 8px;}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#4fc3ff,#48e08b);}
+  .quiz-option{
+    display:flex;gap:10px;align-items:flex-start;
+    padding:10px 12px;border:2px solid #2a4a72;border-radius:4px;
+    margin:8px 0;background:rgba(6,12,24,.9);cursor:pointer;
+    line-height:1.4;color:#e0ecff;font-size:14px;
+  }
+  .quiz-option:hover{border-color:#ffd24a;background:rgba(20,34,58,.9);}
+  .quiz-option input{margin-top:3px;transform:scale(1.3);accent-color:#ffd24a;}
+  .feedback{
+    margin-top:12px;padding:12px;border-radius:4px;border:2px solid #3c5b84;
+    background:rgba(6,12,24,.95);line-height:1.5;color:#e0ecff;font-size:14px;
+  }
+  .feedback.good{border-color:#3ae889;background:rgba(12,60,36,.5);}
+  .feedback.bad{border-color:#ff6b6b;background:rgba(80,15,15,.5);}
+  .hidden{display:none!important;}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .list{display:grid;gap:8px;margin:10px 0;}
+  .list-item{padding:10px 12px;border:1px solid #2e4c72;border-radius:4px;background:rgba(6,12,24,.75);font-size:14px;}
+  .list-item.good{border-color:#3ae889;}
+  .list-item.bad{border-color:#ff6b6b;}
+  .muted{color:#8fa5c0;}
+  #touchControls{
+    position:fixed;left:0;right:0;bottom:0;height:160px;pointer-events:none;
+    display:none;z-index:30;padding:10px;
+  }
+  #touchControls.show{display:flex;justify-content:space-between;align-items:flex-end;}
+  .touch-group{display:flex;gap:10px;pointer-events:auto;}
+  .touch-btn{
+    width:70px;height:70px;border-radius:50%;
+    background:rgba(16,30,54,.85);border:3px solid #6ba4e8;
+    color:#e8f0ff;font-size:26px;font-weight:bold;font-family:"Courier New",monospace;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 5px 0 rgba(0,0,0,.5);
+    touch-action:none;
+    text-shadow:2px 2px 0 #000;
+  }
+  .touch-btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.5);}
+  .touch-btn.boost{border-color:#ffd24a;color:#ffd24a;}
+  .touch-btn.brake{border-color:#ff8a8a;color:#ffb3b3;}
+  #muteBtn{
+    position:fixed;top:12px;right:12px;z-index:60;pointer-events:auto;
+    background:rgba(6,12,24,.85);border:2px solid #4d78aa;color:#fff;
+    border-radius:4px;padding:8px 10px;font-family:inherit;cursor:pointer;
+    font-size:16px;
+  }
+  .kbd{
+    display:inline-block;padding:2px 7px;border:1px solid #5a8bc9;border-radius:3px;
+    background:#050a14;color:#d9ecff;font-size:12px;font-family:inherit;
+    text-shadow:none;box-shadow:0 2px 0 rgba(0,0,0,.6);
+  }
+  @media (max-width:700px){
+    .screen{padding:15px;border-radius:4px;}
+    .touch-btn{width:62px;height:62px;font-size:22px;}
+    #touchControls{height:140px;}
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<button id="muteBtn" title="Ligar/desligar áudio">🔊</button>
+
+<div id="overlay">
+  <div id="titleScreen" class="screen show">
+    <div class="tag">Corrida arcade educativa</div>
+    <h1>DESBLOQUEIE SEU FUTURO</h1>
+    <h2>Corrida pela Aprendizagem</h2>
+    <p>Uma jornada de conhecimento, iniciativa e novas oportunidades! Conduza seu carrinho de supermercado, ultrapasse adversários e responda às oito missões sobre o Programa de Aprendizagem Profissional.</p>
+    <div class="row" style="margin-top:16px;">
+      <button class="btn primary" id="btnNewGame">▶ Nova campanha</button>
+      <button class="btn" id="btnContinueGame">↻ Continuar</button>
+      <button class="btn" id="btnInstructions">? Como jogar</button>
+    </div>
+    <p class="muted" style="margin-top:16px;font-size:13px;">Dica: use <span class="kbd">↑</span>/<span class="kbd">W</span> para acelerar, <span class="kbd">←</span>/<span class="kbd">→</span> para dirigir, <span class="kbd">Espaço</span> para impulso e <span class="kbd">Esc</span> para pausar.</p>
+  </div>
+
+  <div id="instructionsScreen" class="screen">
+    <h2>Como jogar</h2>
+    <div class="list">
+      <div class="list-item"><b>Objetivo:</b> concluir as cinco etapas, responder às oito missões e chegar o mais bem colocado possível.</div>
+      <div class="list-item"><b>Teclado:</b> setas ou WASD para dirigir; Espaço para impulso; Esc para pausar.</div>
+      <div class="list-item"><b>Toque:</b> use os botões na parte inferior da tela durante a corrida.</div>
+      <div class="list-item"><b>Energia:</b> o impulso gasta energia. Passe pelas estações verdes de apoio para recuperar.</div>
+      <div class="list-item"><b>Missões:</b> ao atingir pontos de desafio, a corrida pausa e uma pergunta aparece. Leia o feedback e continue.</div>
+      <div class="list-item"><b>Importante:</b> o jogo é educativo. Participar de um curso ou acertar o quiz não garante contratação.</div>
+    </div>
+    <button class="btn primary" id="btnInstructionsBack">Voltar</button>
+  </div>
+
+  <div id="cartScreen" class="screen">
+    <div class="tag">Escolha seu carrinho</div>
+    <h2>Qual carrinho vai levar você mais longe?</h2>
+    <div id="cartGrid" class="grid carts"></div>
+    <p class="muted" style="margin-top:10px;">Cada carrinho tem aceleração, velocidade, controle e estabilidade diferentes.</p>
+  </div>
+
+  <div id="stageScreen" class="screen">
+    <div class="tag" id="stageTag">Etapa</div>
+    <h2 id="stageTitle">Etapa</h2>
+    <h3 id="stageName">Circuito</h3>
+    <p id="stageDesc"></p>
+    <div class="list" id="stageMissions"></div>
+    <button class="btn primary" id="btnStartStage">🏁 Iniciar corrida</button>
+  </div>
+
+  <div id="quizScreen" class="screen">
+    <div class="tag" id="quizTag">Missão</div>
+    <h2 id="quizQuestion">Pergunta</h2>
+    <div id="quizOptions"></div>
+    <div id="quizFeedback" class="feedback hidden"></div>
+    <div class="row" style="margin-top:12px;">
+      <button class="btn primary" id="quizSubmit">Responder</button>
+      <button class="btn good hidden" id="quizContinue">Continuar corrida</button>
+    </div>
+  </div>
+
+  <div id="pauseScreen" class="screen">
+    <h2>Corrida pausada</h2>
+    <p>Respire, ajuste o rumo e continue quando quiser.</p>
+    <div class="row">
+      <button class="btn primary" id="btnResume">▶ Continuar</button>
+      <button class="btn" id="btnRestartStage">↻ Reiniciar etapa</button>
+      <button class="btn danger" id="btnQuit">Sair para o início</button>
+    </div>
+  </div>
+
+  <div id="stageCompleteScreen" class="screen">
+    <div class="tag">Etapa concluída</div>
+    <h2 id="stageCompleteTitle">Boa corrida!</h2>
+    <div id="stageCompleteStats" class="list"></div>
+    <button class="btn primary" id="btnNextStage">Próxima etapa</button>
+  </div>
+
+  <div id="resultsScreen" class="screen">
+    <div class="tag">Resultado final</div>
+    <h1 style="font-size:clamp(22px,4vw,42px);">Sua campanha</h1>
+    <div id="resultsStats" class="list"></div>
+    <h3>Resumo das oito missões</h3>
+    <div id="missionSummary" class="list"></div>
+    <div class="row" style="margin-top:14px;">
+      <button class="btn primary" id="btnReplay">▶ Jogar novamente</button>
+      <button class="btn" id="btnBackTitle">Início</button>
+    </div>
+    <p class="muted" style="margin-top:12px;">Seu futuro começa com o primeiro passo! Pesquise oportunidades reais em canais confiáveis e continue investindo nos estudos.</p>
+  </div>
+</div>
+
+<div id="touchControls">
+  <div class="touch-group">
+    <button class="touch-btn" id="tLeft" aria-label="Esquerda">◀</button>
+    <button class="touch-btn" id="tRight" aria-label="Direita">▶</button>
+  </div>
+  <div class="touch-group">
+    <button class="touch-btn brake" id="tBrake" aria-label="Frear">■</button>
+    <button class="touch-btn boost" id="tBoost" aria-label="Impulso">⚡</button>
+    <button class="touch-btn" id="tAccel" aria-label="Acelerar">▲</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DADOS PEDAGÓGICOS — preservados do DOCX (inalterados)
+   ============================================================ */
+const MISSIONS = [
+  { id:1, title:"Desbloqueie os requisitos",
+    question:"Qual é a faixa etária geral para participar do Programa de Aprendizagem Profissional?",
+    type:"single",
+    options:["A) De 12 a 18 anos","B) De 14 anos completos até antes dos 24 anos","C) A partir dos 18 anos, sem limite","D) Somente entre 16 e 21 anos"],
+    correct:1,
+    feedback:"Essa é a faixa etária geral. Para pessoas com deficiência, não há limite máximo de idade." },
+  { id:2, title:"Continue estudando",
+    question:"Quem ainda não concluiu o Ensino Médio, em regra, precisa:",
+    type:"single",
+    options:["A) Estar matriculado e frequentar a escola regular","B) Ter apenas um currículo atualizado","C) Frequentar somente um curso livre","D) Esperar concluir o Ensino Médio para procurar vagas"],
+    correct:0,
+    feedback:"A matrícula e a frequência escolar são exigidas para quem ainda não concluiu o Ensino Médio, além dos demais requisitos aplicáveis." },
+  { id:3, title:"Encontre oportunidades",
+    question:"Você quer encontrar uma vaga de Jovem Aprendiz em uma empresa do comércio. Qual é uma boa estratégia?",
+    type:"single",
+    options:["A) Esperar a empresa entrar em contato","B) Enviar documentos pessoais para qualquer perfil","C) Pesquisar sites oficiais das empresas e canais confiáveis de vagas","D) Procurar somente indicações de amigos"],
+    correct:2,
+    feedback:"Esses canais ajudam a encontrar oportunidades e conferir os requisitos e as orientações para candidatura." },
+  { id:4, title:"Saiba onde se inscrever",
+    question:"Qual afirmação sobre as inscrições para vagas de Jovem Aprendiz está correta?",
+    type:"single",
+    options:["A) Todas as inscrições são feitas diretamente no SENAC","B) É preciso conferir onde a empresa recebe candidaturas","C) Basta comparecer à empresa sem consultar a vaga","D) A inscrição só pode ser feita presencialmente"],
+    correct:1,
+    feedback:"As inscrições para vagas de emprego dependem da empresa contratante ou do canal indicado na divulgação. O SENAC oferece formação profissional, mas não realiza necessariamente a inscrição em cada vaga." },
+  { id:5, title:"Prepare-se para a oportunidade",
+    question:"Quais atitudes podem ajudar você a buscar uma oportunidade de Jovem Aprendiz? Selecione todas as opções corretas.",
+    type:"multi",
+    options:["A) Manter o currículo atualizado","B) Conferir os requisitos e os prazos das vagas","C) Pagar uma taxa para garantir a contratação","D) Acompanhar os canais oficiais das empresas"],
+    correct:[0,1,3],
+    feedback:"Um currículo atualizado, atenção aos requisitos e acompanhamento de canais oficiais ajudam na busca. Desconfie de cobranças para garantir contratação." },
+  { id:6, title:"Entenda o papel da formação",
+    question:"O SENAC oferece formação profissional, mas participar de um curso não garante automaticamente a contratação por uma empresa.",
+    type:"tf",
+    options:["Verdadeiro","Falso"],
+    correct:0,
+    feedback:"A formação contribui para desenvolver competências profissionais, mas a contratação depende do processo seletivo e dos critérios da empresa." },
+  { id:7, title:"Proteja seus dados",
+    question:"Se uma vaga de Jovem Aprendiz estiver divulgada na internet, é seguro enviar seus dados sem verificar quem publicou o anúncio.",
+    type:"tf",
+    options:["Verdadeiro","Falso"],
+    correct:1,
+    feedback:"Verifique a empresa e o canal oficial antes de compartilhar dados pessoais. A divulgação na internet, por si só, não comprova que a vaga seja legítima." },
+  { id:8, title:"Dê o primeiro passo",
+    question:"Você quer dar o primeiro passo para conquistar uma oportunidade como Jovem Aprendiz. O que faz sentido?",
+    type:"single",
+    options:["A) Desistir porque ainda não tenho experiência","B) Acreditar no meu potencial e buscar vagas compatíveis com meu perfil","C) Aceitar qualquer proposta sem verificar as condições","D) Esperar até que todas as oportunidades cheguem até mim"],
+    correct:1,
+    feedback:"Buscar oportunidades, conferir requisitos e desenvolver competências são passos práticos para avançar." }
+];
+
+/* ============================================================
+   ETAPAS — paleta SNES/Top Gear (visual apenas)
+   ============================================================ */
+const STAGES = [
+  {
+    subtitle:"Etapa 1 — Desbloqueie os requisitos",
+    name:"Circuito do Centro de Distribuição",
+    desc:"Retas largas, curvas suaves e muita organização logística. Entenda a idade e a escola.",
+    missions:[0,1], triggers:[0.32,0.70], length:850, curveScale:1.0,
+    sky:["#0a1a5a","#2a6ac8","#6ac8ff","#ffcc88"],
+    ground:"#c8944a", ground2:"#b8843a",
+    road:"#26263a", roadAlt:"#2e2e44",
+    building:"#8a4a4a",
+    mountain:"#3a2a5a", mountain2:"#5a4a7a",
+    treeTrunk:"#5a3a1a", treeLeaf:"#1a8a3a",
+    accent:"#ffd24a",
+    curveFn:(i)=>Math.sin(i/62+0.5)*0.9+Math.sin(i/21+1.7)*0.28
+  },
+  {
+    subtitle:"Etapa 2 — Encontre oportunidades",
+    name:"Corrida pelo Bairro Comercial",
+    desc:"Vitrines, faixas e canais confiáveis. Descubra onde procurar vagas de Jovem Aprendiz.",
+    missions:[2], triggers:[0.50], length:800, curveScale:1.15,
+    sky:["#1a1a4a","#7a3a8a","#ee6644","#ffcc66"],
+    ground:"#7a5a3a", ground2:"#6a4a2a",
+    road:"#26263a", roadAlt:"#2e2e44",
+    building:"#5a3a5a",
+    mountain:"#2a1a3a", mountain2:"#4a3a5a",
+    treeTrunk:"#4a2a10", treeLeaf:"#2a6a3a",
+    accent:"#ffb84a",
+    curveFn:(i)=>Math.sin(i/45+2.1)*1.0+Math.sin(i/15+0.4)*0.3
+  },
+  {
+    subtitle:"Etapa 3 — Prepare sua candidatura",
+    name:"Desafio das Gôndolas Gigantes",
+    desc:"Corredores estreitos, curvas fechadas e atenção aos canais de inscrição.",
+    missions:[3,4], triggers:[0.35,0.72], length:900, curveScale:1.35,
+    sky:["#0a0a3a","#4a1a7a","#aa44aa","#ff88cc"],
+    ground:"#3a2a5a", ground2:"#2a1a4a",
+    road:"#1a1a2a", roadAlt:"#22223a",
+    building:"#5a3a7a",
+    mountain:"#2a1a3a", mountain2:"#4a2a5a",
+    treeTrunk:"#3a1a3a", treeLeaf:"#aa44aa",
+    accent:"#ff7bd5",
+    curveFn:(i)=>Math.sin(i/38+3.3)*1.1+Math.sin(i/13+2.0)*0.36
+  },
+  {
+    subtitle:"Etapa 4 — Proteja seu futuro",
+    name:"Grande Prêmio do Varejo",
+    desc:"Velocidade, obstáculos e decisões seguras. Proteja seus dados e entenda a formação.",
+    missions:[5,6], triggers:[0.34,0.70], length:880, curveScale:1.25,
+    sky:["#000010","#0a1a4a","#2a4a8a","#5a8ac8"],
+    hasStars:true,
+    ground:"#1a2a3a", ground2:"#0a1a2a",
+    road:"#1a1a2a", roadAlt:"#22223a",
+    building:"#2a3a5a",
+    mountain:"#0a1a2a", mountain2:"#1a2a4a",
+    treeTrunk:"#0a1a0a", treeLeaf:"#1a4a2a",
+    accent:"#57e0c8",
+    curveFn:(i)=>Math.sin(i/52+4.4)*1.0+Math.sin(i/17+3.1)*0.32
+  },
+  {
+    subtitle:"Etapa 5 — Dê o primeiro passo",
+    name:"Final no Boulevard da Aprendizagem",
+    desc:"A última volta. Acredite no seu potencial e busque oportunidades compatíveis com seu perfil.",
+    missions:[7], triggers:[0.50], length:950, curveScale:1.4,
+    sky:["#1a1a4a","#aa4422","#ff8844","#ffdd66"],
+    ground:"#5a4a2a", ground2:"#4a3a1a",
+    road:"#26263a", roadAlt:"#2e2e44",
+    building:"#4a3a4a",
+    mountain:"#3a2a3a", mountain2:"#5a3a4a",
+    treeTrunk:"#3a2a10", treeLeaf:"#2a6a2a",
+    accent:"#ffd24a",
+    curveFn:(i)=>Math.sin(i/34+5.7)*1.2+Math.sin(i/11+1.2)*0.4
+  }
+];
+
+const CARTS = [
+  { id:"leve", name:"Carrinho Leve",
+    desc:"Aceleração rápida, boa resposta nas curvas e velocidade final moderada.",
+    accel:1.60, maxSpeed:335, handling:1.25, stability:0.82,
+    color:"#f2c94c", type:"leve" },
+  { id:"reforcado", name:"Carrinho Reforçado",
+    desc:"Maior estabilidade e resistência a colisões, mas aceleração mais lenta.",
+    accel:0.92, maxSpeed:285, handling:0.92, stability:1.45,
+    color:"#27ae60", type:"reforcado" },
+  { id:"esportivo", name:"Carrinho Esportivo",
+    desc:"Maior velocidade final e boa aceleração, com controle mais exigente.",
+    accel:1.34, maxSpeed:378, handling:1.02, stability:0.90,
+    color:"#eb5757", type:"esportivo" },
+  { id:"profissional", name:"Carrinho Profissional",
+    desc:"Características equilibradas, adequado para iniciantes.",
+    accel:1.14, maxSpeed:322, handling:1.12, stability:1.12,
+    color:"#2d9cdb", type:"profissional" }
+];
+
+/* ============================================================
+   ÁUDIO (inalterado)
+   ============================================================ */
+const AudioSys = {
+  ctx:null, master:null, muted:false, musicTimer:null, step:0,
+  init() {
+    if (this.ctx) { if (this.ctx.state==="suspended") this.ctx.resume().catch(()=>{}); return; }
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.muted ? 0 : 0.16;
+      this.master.connect(this.ctx.destination);
+    } catch(e) { this.ctx = null; }
+  },
+  setMuted(m) {
+    this.muted = m;
+    if (this.master && this.ctx) this.master.gain.setTargetAtTime(m?0:0.16, this.ctx.currentTime, 0.02);
+  },
+  tone(freq,dur=0.08,type="square",vol=0.5,when=0) {
+    if (!this.ctx || this.muted) return;
+    try {
+      const t = this.ctx.currentTime + when;
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq,t);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0001,vol),t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      o.connect(g); g.connect(this.master);
+      o.start(t); o.stop(t+dur+0.02);
+    } catch(e) {}
+  },
+  noise(dur=0.15,vol=0.35) {
+    if (!this.ctx || this.muted) return;
+    try {
+      const n = Math.floor(this.ctx.sampleRate*dur);
+      const buf = this.ctx.createBuffer(1,n,this.ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i=0;i<n;i++) data[i] = (Math.random()*2-1)*(1-i/n);
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      const g = this.ctx.createGain(); g.gain.value = vol;
+      src.connect(g); g.connect(this.master); src.start();
+    } catch(e) {}
+  },
+  sfx(name) {
+    switch(name) {
+      case "correct":
+        this.tone(660,0.08,"square",0.5,0); this.tone(880,0.1,"square",0.45,0.08);
+        this.tone(1320,0.14,"square",0.35,0.18); break;
+      case "wrong":
+        this.tone(180,0.18,"sawtooth",0.5,0); this.tone(130,0.22,"sawtooth",0.45,0.16); break;
+      case "collision":
+        this.noise(0.18,0.55); this.tone(90,0.16,"sawtooth",0.45,0); break;
+      case "overtake":
+        this.tone(880,0.05,"square",0.35,0); this.tone(1180,0.07,"square",0.3,0.05); break;
+      case "boost": this.tone(260,0.08,"sawtooth",0.18,0); break;
+      case "station":
+        this.tone(520,0.08,"triangle",0.4,0); this.tone(780,0.1,"triangle",0.35,0.08); break;
+      case "finish":
+        [523,659,784,1047].forEach((f,i)=>this.tone(f,0.16,"square",0.4,i*0.12)); break;
+    }
+  },
+  startMusic() {
+    if (!this.ctx || this.musicTimer) return;
+    const melody = [523,659,784,659,587,698,880,698,523,659,784,988,880,784,659,587];
+    const bass = [131,131,165,165,147,147,196,196];
+    this.step = 0;
+    this.musicTimer = setInterval(() => {
+      if (this.muted || !this.ctx) return;
+      const s = this.step % melody.length;
+      this.tone(melody[s],0.1,"square",0.12);
+      if (s%2===0) this.tone(bass[(this.step>>1)%bass.length],0.14,"triangle",0.15);
+      this.step++;
+    }, 150);
+  }
+};
+
+/* ============================================================
+   ESTADO (inalterado)
+   ============================================================ */
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+let W = innerWidth, H = innerHeight, lastTime = 0, menuTime = 0;
+
+const game = {
+  state:"menu", stageIndex:0, stage:STAGES[0],
+  cartId:"profissional", cart:CARTS[3],
+  player:null, ai:[], obstacles:[], stations:[], particles:[], center:[],
+  missionResults:new Array(8).fill(null), stageResults:[],
+  score:0, totalTime:0, overtakes:0, stageTime:0, lastPos:6,
+  finishPending:false, currentMission:null, quizSubmitted:false, flash:0,
+  keys:{}, touch:{left:false,right:false,accel:false,brake:false,boost:false},
+  paused:false
+};
+
+const VIEW_DISTANCE = 200;
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
+function rand(a,b){return a+Math.random()*(b-a);}
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(el=>el.classList.remove("show"));
+  if (id) document.getElementById(id).classList.add("show");
+}
+function showControls(v){ document.getElementById("touchControls").classList.toggle("show",!!v); }
+function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+addEventListener("resize", resize);
+resize();
+
+function shadeColor(hex, percent) {
+  if (!hex || hex.length < 7) return hex;
+  const num = parseInt(hex.replace("#",""), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = clamp((num>>16)+amt,0,255);
+  const G = clamp(((num>>8)&0x00FF)+amt,0,255);
+  const B = clamp((num&0x0000FF)+amt,0,255);
+  return "#" + (0x1000000 + R*0x10000 + G*0x100 + B).toString(16).slice(1);
+}
+
+function elevationAt(dist) {
+  return Math.sin(dist/90)*10 + Math.sin(dist/35+1.5)*3;
+}
+
+function buildTrack(stage) {
+  const len = stage.length + 420;
+  const arr = new Array(len); arr[0] = 0;
+  for (let i=1;i<len;i++) arr[i] = arr[i-1] + stage.curveFn(i)*stage.curveScale*0.021;
+  game.center = arr;
+}
+function centerAt(dist) {
+  const c = game.center;
+  if (!c || c.length === 0) return 0;
+  if (dist <= 0) return c[0];
+  const i = Math.floor(dist);
+  const f = dist - i;
+  const a = c[Math.min(i,c.length-1)];
+  const b = c[Math.min(i+1,c.length-1)];
+  return a + (b-a)*f;
+}
+
+/* ============================================================
+   INICIALIZAÇÃO (inalterada)
+   ============================================================ */
+function initMenuScene() {
+  game.stage = STAGES[0];
+  buildTrack(game.stage);
+  game.player = {x:0,speed:0,energy:100,dist:0,pos:6,wheelPhase:0,lean:0,collisionCooldown:0,boostActive:false};
+  game.ai=[]; game.obstacles=[]; game.stations=[]; game.particles=[];
+}
+initMenuScene();
+
+function resetCampaign() {
+  game.missionResults = new Array(8).fill(null);
+  game.stageResults = []; game.score = 0; game.totalTime = 0;
+  game.overtakes = 0; game.stageIndex = 0; game.finishPending = false;
+  game.currentMission = null; game.quizSubmitted = false; game.flash = 0;
+  try { localStorage.removeItem("desbloqueieFuturoSave"); } catch(e) {}
+}
+
+function showCartSelect() {
+  const grid = document.getElementById("cartGrid");
+  grid.innerHTML = "";
+  CARTS.forEach(c => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3 style="color:${c.color}">${c.name}</h3>
+      <p style="font-size:13px;min-height:54px;">${c.desc}</p>
+      <div class="statline"><span>Aceleração</span><b>${Math.round(c.accel*10)}</b></div>
+      <div class="bar"><i style="width:${Math.min(100,c.accel*55)}%"></i></div>
+      <div class="statline"><span>Velocidade</span><b>${c.maxSpeed}</b></div>
+      <div class="bar"><i style="width:${Math.min(100,c.maxSpeed/4)}%"></i></div>
+      <div class="statline"><span>Controle</span><b>${Math.round(c.handling*10)}</b></div>
+      <div class="bar"><i style="width:${Math.min(100,c.handling*55)}%"></i></div>
+      <div class="statline"><span>Estabilidade</span><b>${Math.round(c.stability*10)}</b></div>
+      <div class="bar"><i style="width:${Math.min(100,c.stability*55)}%"></i></div>
+    `;
+    card.addEventListener("click", () => {
+      game.cartId = c.id; game.cart = c;
+      AudioSys.init(); AudioSys.startMusic();
+      showStageIntro(0);
+    });
+    grid.appendChild(card);
+  });
+  showScreen("cartScreen");
+}
+
+function showStageIntro(index) {
+  game.stageIndex = index;
+  const stage = STAGES[index]; game.stage = stage;
+  buildTrack(stage);
+  document.getElementById("stageTag").textContent = `Etapa ${index+1} de 5`;
+  document.getElementById("stageTitle").textContent = stage.subtitle;
+  document.getElementById("stageName").textContent = stage.name;
+  document.getElementById("stageDesc").textContent = stage.desc;
+  const list = document.getElementById("stageMissions");
+  list.innerHTML = "";
+  stage.missions.forEach(mi => {
+    const m = MISSIONS[mi];
+    const item = document.createElement("div");
+    item.className = "list-item";
+    item.innerHTML = `<b>Missão ${m.id}:</b> ${m.title}`;
+    list.appendChild(item);
+  });
+  showScreen("stageScreen");
+  showControls(false);
+}
+
+function startStage(index) {
+  game.stageIndex = index;
+  game.stage = STAGES[index];
+  game.cart = CARTS.find(c=>c.id===game.cartId) || CARTS[3];
+  buildTrack(game.stage);
+
+  game.player = {x:0,speed:0,energy:100,dist:0,pos:6,wheelPhase:0,lean:0,collisionCooldown:0,boostActive:false};
+
+  const colors = ["#e76f51","#2a9d8f","#e9c46a","#8e7dff","#ff7aa2","#57cc99"];
+  const types = ["leve","reforcado","esportivo","profissional"];
+  game.ai = [];
+  for (let i=0;i<5;i++) {
+    const baseLane = -0.72 + i*0.36;
+    game.ai.push({
+      id:i, name:"Adversário "+(i+1),
+      dist:18+i*16+rand(0,8), lane:baseLane, baseLane:baseLane,
+      speed:235+rand(0,80), baseSpeed:235+rand(0,80),
+      color:colors[i%colors.length], type:types[i%types.length],
+      wheelPhase:rand(0,10), phase:rand(0,Math.PI*2), pos:1
+    });
+  }
+
+  game.obstacles = [];
+  for (let i=0;i<13;i++) {
+    game.obstacles.push({
+      dist: game.stage.length*((i+1)/15)+rand(-14,14),
+      lane: [-0.62,0,0.62][i%3]+rand(-0.08,0.08),
+      type: i%2===0?"crate":"cone",
+      hit:false
+    });
+  }
+
+  game.stations = [
+    { dist: game.stage.length*0.42, lane:-0.78, used:false },
+    { dist: game.stage.length*0.78, lane:0.78, used:false }
+  ];
+
+  game.particles = []; game.stageTime = 0; game.lastPos = 6;
+  game.finishPending = false; game.currentMission = null;
+  game.quizSubmitted = false; game.flash = 0;
+  game.state = "racing"; game.paused = false;
+  showScreen(null); showControls(true);
+  AudioSys.init(); AudioSys.startMusic();
+}
+
+/* ============================================================
+   QUIZ (inalterado)
+   ============================================================ */
+function openQuiz(missionIndex) {
+  if (game.missionResults[missionIndex]) return;
+  game.state = "quiz"; game.currentMission = missionIndex; game.quizSubmitted = false;
+  const m = MISSIONS[missionIndex];
+  document.getElementById("quizTag").textContent = `Missão ${m.id} — ${m.title}`;
+  document.getElementById("quizQuestion").textContent = m.question;
+
+  const opts = document.getElementById("quizOptions");
+  opts.innerHTML = "";
+  const inputType = m.type==="multi" ? "checkbox" : "radio";
+  m.options.forEach((opt,i) => {
+    const label = document.createElement("label");
+    label.className = "quiz-option";
+    const input = document.createElement("input");
+    input.type = inputType; input.name = "quizOption"; input.value = String(i);
+    label.appendChild(input);
+    const span = document.createElement("span"); span.textContent = opt;
+    label.appendChild(span);
+    opts.appendChild(label);
+  });
+
+  const fb = document.getElementById("quizFeedback");
+  fb.classList.add("hidden"); fb.className = "feedback hidden"; fb.innerHTML = "";
+  document.getElementById("quizSubmit").classList.remove("hidden");
+  document.getElementById("quizSubmit").disabled = false;
+  document.getElementById("quizContinue").classList.add("hidden");
+  showScreen("quizScreen"); showControls(false);
+}
+
+function submitQuiz() {
+  if (game.state !== "quiz" || game.quizSubmitted) return;
+  const m = MISSIONS[game.currentMission];
+  const inputs = Array.from(document.querySelectorAll("#quizOptions input"));
+  const selected = inputs.filter(inp=>inp.checked).map(inp=>Number(inp.value));
+  if (selected.length === 0) {
+    const fb = document.getElementById("quizFeedback");
+    fb.className = "feedback";
+    fb.innerHTML = "Selecione pelo menos uma opção para responder.";
+    fb.classList.remove("hidden");
+    return;
+  }
+  let correct = false;
+  if (m.type === "multi") {
+    const a = [...selected].sort((x,y)=>x-y).join(",");
+    const b = [...m.correct].sort((x,y)=>x-y).join(",");
+    correct = a === b;
+  } else {
+    correct = selected.length === 1 && selected[0] === m.correct;
+  }
+  game.quizSubmitted = true;
+  game.missionResults[game.currentMission] = {correct, selected};
+  game.score += correct ? 260 : 70;
+  AudioSys.sfx(correct ? "correct" : "wrong");
+
+  const correctText = m.type==="multi"
+    ? m.correct.map(i=>m.options[i]).join(" | ")
+    : m.options[m.correct];
+
+  const fb = document.getElementById("quizFeedback");
+  fb.className = "feedback " + (correct?"good":"bad");
+  fb.innerHTML = `
+    <b>${correct?"✅ Resposta correta!":"❌ Não foi dessa vez."}</b><br>
+    <b>Resposta correta:</b> ${correctText}<br><br>
+    ${m.feedback}
+  `;
+  fb.classList.remove("hidden");
+  document.getElementById("quizSubmit").classList.add("hidden");
+  document.getElementById("quizContinue").classList.remove("hidden");
+  document.getElementById("quizContinue").focus();
+}
+
+function continueQuiz() {
+  if (game.state !== "quiz") return;
+  document.getElementById("quizScreen").classList.remove("show");
+  if (game.finishPending) {
+    const next = game.stage.missions.find(mi=>!game.missionResults[mi]);
+    if (next !== undefined) { openQuiz(next); } else { finishStage(); }
+    return;
+  }
+  game.state = "racing"; showScreen(null); showControls(true);
+}
+
+function finishStage() {
+  if (game.state==="stageComplete" || game.state==="results") return;
+  game.state = "stageComplete";
+  const stage = game.stage;
+  const pos = game.player.pos;
+  const correctInStage = stage.missions.filter(mi => game.missionResults[mi] && game.missionResults[mi].correct).length;
+  const bonus = 500 + Math.max(0,6-pos)*120 + correctInStage*120;
+  game.score += bonus;
+  game.totalTime += game.stageTime;
+  game.stageResults.push({stageIndex:game.stageIndex, name:stage.name, pos, time:game.stageTime, correct:correctInStage, missions:stage.missions.slice()});
+  saveProgress(); AudioSys.sfx("finish"); showControls(false);
+
+  const stats = document.getElementById("stageCompleteStats");
+  stats.innerHTML = `
+    <div class="list-item"><b>Circuito:</b> ${stage.name}</div>
+    <div class="list-item"><b>Posição na etapa:</b> ${pos}º lugar</div>
+    <div class="list-item"><b>Tempo da etapa:</b> ${formatTime(game.stageTime)}</div>
+    <div class="list-item"><b>Bônus de etapa:</b> +${bonus} pontos</div>
+    <div class="list-item"><b>Missões corretas nesta etapa:</b> ${correctInStage}/${stage.missions.length}</div>
+  `;
+  document.getElementById("stageCompleteTitle").textContent =
+    game.stageIndex===STAGES.length-1 ? "Campanha concluída!" : "Etapa concluída!";
+  document.getElementById("btnNextStage").textContent =
+    game.stageIndex===STAGES.length-1 ? "Ver resultados finais" : "Próxima etapa";
+  showScreen("stageCompleteScreen");
+}
+
+function showResults() {
+  game.state = "results"; saveProgress(true); showControls(false);
+  const correctCount = game.missionResults.filter(r=>r&&r.correct).length;
+  const wrongCount = game.missionResults.filter(r=>r&&!r.correct).length;
+  const answered = game.missionResults.filter(Boolean).length;
+  const pct = Math.round((correctCount/8)*100);
+  const last = game.stageResults[game.stageResults.length-1];
+  const cart = CARTS.find(c=>c.id===game.cartId) || CARTS[3];
+
+  document.getElementById("resultsStats").innerHTML = `
+    <div class="list-item"><b>Carrinho utilizado:</b> ${cart.name}</div>
+    <div class="list-item"><b>Circuitos concluídos:</b> ${game.stageResults.length}/5</div>
+    <div class="list-item"><b>Posição final:</b> ${last?last.pos+"º lugar":"—"}</div>
+    <div class="list-item"><b>Tempo total:</b> ${formatTime(game.totalTime)}</div>
+    <div class="list-item"><b>Pontuação:</b> ${Math.round(game.score)}</div>
+    <div class="list-item"><b>Ultrapassagens:</b> ${game.overtakes}</div>
+    <div class="list-item"><b>Missões respondidas:</b> ${answered}/8</div>
+    <div class="list-item"><b>Acertos / erros:</b> ${correctCount} acerto(s) e ${wrongCount} erro(s)</div>
+    <div class="list-item"><b>Aproveitamento pedagógico:</b> ${pct}%</div>
+  `;
+  const summary = document.getElementById("missionSummary");
+  summary.innerHTML = "";
+  MISSIONS.forEach((m,i) => {
+    const r = game.missionResults[i];
+    const item = document.createElement("div");
+    item.className = "list-item " + (r ? (r.correct?"good":"bad") : "");
+    item.innerHTML = `<b>Missão ${m.id} — ${m.title}:</b> ${
+      r ? (r.correct ? "✅ correta" : "❌ incorreta") : "não respondida"
+    }`;
+    summary.appendChild(item);
+  });
+  showScreen("resultsScreen");
+}
+
+function formatTime(s) {
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60);
+  return `${m}:${String(sec).padStart(2,"0")}`;
+}
+
+function saveProgress(completed=false) {
+  try {
+    localStorage.setItem("desbloqueieFuturoSave", JSON.stringify({
+      stageIndex:game.stageIndex, cartId:game.cartId,
+      missionResults:game.missionResults, stageResults:game.stageResults,
+      score:game.score, totalTime:game.totalTime, overtakes:game.overtakes, completed
+    }));
+  } catch(e) {}
+}
+function hasSave() {
+  try {
+    const raw = localStorage.getItem("desbloqueieFuturoSave");
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    return !s.completed && s.stageIndex>=0 && s.stageIndex<STAGES.length;
+  } catch(e) { return false; }
+}
+function loadSave() {
+  try {
+    const raw = localStorage.getItem("desbloqueieFuturoSave");
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || s.completed) return false;
+    game.stageIndex = clamp(Number(s.stageIndex)||0, 0, STAGES.length-1);
+    game.cartId = s.cartId || "profissional";
+    game.cart = CARTS.find(c=>c.id===game.cartId) || CARTS[3];
+    game.missionResults = Array.isArray(s.missionResults) ? s.missionResults.slice(0,8) : new Array(8).fill(null);
+    while (game.missionResults.length<8) game.missionResults.push(null);
+    game.stageResults = Array.isArray(s.stageResults) ? s.stageResults : [];
+    game.score = Number(s.score)||0;
+    game.totalTime = Number(s.totalTime)||0;
+    game.overtakes = Number(s.overtakes)||0;
+    showStageIntro(game.stageIndex);
+    return true;
+  } catch(e) { return false; }
+}
+
+/* ============================================================
+   UPDATE (inalterado)
+   ============================================================ */
+function update(dt) {
+  if (game.state !== "racing") return;
+  const p = game.player, cart = game.cart, stage = game.stage;
+  game.stageTime += dt;
+  p.collisionCooldown = Math.max(0, p.collisionCooldown - dt);
+  game.flash = Math.max(0, game.flash - dt*2.5);
+
+  const up = game.keys["ArrowUp"]||game.keys["w"]||game.keys["W"]||game.touch.accel;
+  const down = game.keys["ArrowDown"]||game.keys["s"]||game.keys["S"]||game.touch.brake;
+  const left = game.keys["ArrowLeft"]||game.keys["a"]||game.keys["A"]||game.touch.left;
+  const right = game.keys["ArrowRight"]||game.keys["d"]||game.keys["D"]||game.touch.right;
+  const boostKey = game.keys[" "]||game.touch.boost;
+
+  if (up) p.speed += cart.accel*52*dt;
+  else p.speed -= 22*dt;
+  if (down) p.speed -= 150*dt;
+
+  p.boostActive = false;
+  if (boostKey && p.energy>0 && p.speed>20) {
+    p.speed += 175*dt;
+    p.energy = Math.max(0, p.energy - 27*dt);
+    p.boostActive = true;
+    if (Math.random()<0.45) {
+      game.particles.push({
+        x:W/2+rand(-28,28), y:H*0.9+rand(-8,8),
+        vx:rand(-20,20), vy:rand(-40,-10),
+        life:rand(0.15,0.35), max:0.35,
+        color: Math.random()<0.5?"#ffd24a":"#ff7a3d"
+      });
+    }
+    if (Math.random()<0.08) AudioSys.sfx("boost");
+  } else {
+    p.energy = Math.min(100, p.energy + 2.2*dt);
+  }
+
+  const max = cart.maxSpeed * (p.boostActive?1.22:1);
+  p.speed = clamp(p.speed, 0, max);
+
+  let steer = 0;
+  if (left) steer -= 1;
+  if (right) steer += 1;
+  if (steer !== 0) {
+    p.x += steer * cart.handling * (0.42 + 0.9*(p.speed/cart.maxSpeed)) * dt;
+    p.lean = lerp(p.lean, steer*0.18, 0.18);
+  } else {
+    p.lean = lerp(p.lean, 0, 0.12);
+  }
+  p.x = clamp(p.x, -1.16, 1.16);
+
+  if (Math.abs(p.x) > 1.0) {
+    p.speed *= 0.986;
+    if (Math.random()<0.3) {
+      game.particles.push({
+        x:W/2+p.x*W*0.18, y:H*0.92,
+        vx:rand(-50,50), vy:rand(-60,-10),
+        life:0.3, max:0.3, color:"#c8b48a"
+      });
+    }
+  }
+
+  p.dist += p.speed * 0.09 * dt;
+  p.wheelPhase += p.speed * dt * 0.16;
+
+  const t = performance.now()*0.001;
+  game.ai.forEach(a => {
+    a.speed = a.baseSpeed + Math.sin(t*0.7+a.phase)*16;
+    a.dist += a.speed * 0.09 * dt;
+    a.lane = clamp(a.baseLane + Math.sin(t*0.8+a.phase)*0.08, -0.85, 0.85);
+    a.wheelPhase += a.speed * dt * 0.14;
+  });
+
+  for (const ob of game.obstacles) {
+    if (ob.hit) continue;
+    if (Math.abs(ob.dist-p.dist)<17 && Math.abs(ob.lane-p.x)<0.24 && p.speed>45) {
+      ob.hit = true;
+      p.collisionCooldown = 0.75;
+      p.speed *= 0.52;
+      game.flash = 1;
+      game.score = Math.max(0, game.score - 25);
+      AudioSys.sfx("collision");
+      for (let i=0;i<10;i++) {
+        game.particles.push({
+          x:W/2+rand(-30,30), y:H*0.88+rand(-20,10),
+          vx:rand(-160,160), vy:rand(-180,-40),
+          life:rand(0.25,0.55), max:0.55,
+          color: Math.random()<0.5?"#ffcf5a":"#ff6b6b"
+        });
+      }
+    }
+  }
+
+  for (const st of game.stations) {
+    if (st.used) continue;
+    if (Math.abs(st.dist-p.dist)<20 && Math.abs(st.lane-p.x)<0.42) {
+      st.used = true;
+      p.energy = Math.min(100, p.energy + 52);
+      game.score += 80;
+      AudioSys.sfx("station");
+      for (let i=0;i<12;i++) {
+        game.particles.push({
+          x:W/2+rand(-40,40), y:H*0.82+rand(-30,20),
+          vx:rand(-60,60), vy:rand(-90,-20),
+          life:rand(0.3,0.7), max:0.7, color:"#48e08b"
+        });
+      }
+    }
+  }
+
+  const pos = 1 + game.ai.filter(a=>a.dist>p.dist).length;
+  if (pos < game.lastPos) {
+    game.overtakes++;
+    game.score += 85;
+    AudioSys.sfx("overtake");
+  }
+  game.lastPos = pos;
+  p.pos = pos;
+  game.score += p.speed * dt * 0.045;
+
+  const progress = p.dist / stage.length;
+  if (!game.finishPending) {
+    for (let i=0;i<stage.missions.length;i++) {
+      const mi = stage.missions[i];
+      if (!game.missionResults[mi] && progress >= stage.triggers[i]) {
+        openQuiz(mi); return;
+      }
+    }
+  }
+
+  if (p.dist >= stage.length && !game.finishPending) {
+    game.finishPending = true;
+    const next = stage.missions.find(mi=>!game.missionResults[mi]);
+    if (next !== undefined) { openQuiz(next); } else { finishStage(); }
+    return;
+  }
+
+  for (const pt of game.particles) {
+    pt.x += pt.vx*dt;
+    pt.y += pt.vy*dt;
+    pt.vy += 160*dt;
+    pt.life -= dt;
+  }
+  game.particles = game.particles.filter(pt=>pt.life>0);
+}
+
+/* ============================================================
+   PROJEÇÃO (inalterada)
+   ============================================================ */
+function projectObject(dist, lane, horizon, roadBottom) {
+  const d = dist - game.player.dist;
+  if (d < -4 || d > VIEW_DISTANCE+10) return null;
+  const t = 1 - Math.sqrt(Math.max(0,d)/VIEW_DISTANCE);
+  let y = horizon + (roadBottom-horizon)*t;
+  const camElev = elevationAt(game.player.dist);
+  const worldElev = elevationAt(dist);
+  y -= (worldElev-camElev)*t*0.8;
+  const half = 18 + W*0.46*t*t;
+  const center = W/2 + (centerAt(dist)-centerAt(game.player.dist)-game.player.x)*half;
+  const x = center + lane*half*0.9;
+  const scale = 0.12 + t*1.15;
+  return {x,y,scale,t};
+}
+
+/* ============================================================
+   VISUAL — estilo SNES/Top Gear
+   ============================================================ */
+
+/* Céu em faixas estilo SNES */
+function drawSky(stage, horizon) {
+  const bands = stage.sky;
+  const n = bands.length;
+  const bandH = Math.ceil(horizon / n);
+  for (let i=0;i<n;i++) {
+    ctx.fillStyle = bands[i];
+    ctx.fillRect(0, i*bandH, W, bandH+1);
+  }
+  // Garante cobertura total até o horizonte
+  if (n*bandH < horizon) {
+    ctx.fillStyle = bands[n-1];
+    ctx.fillRect(0, n*bandH, W, horizon - n*bandH + 1);
+  }
+}
+
+/* Estrelas estáticas (para etapa noturna) */
+const STARS = [];
+(function(){
+  for (let i=0;i<70;i++) {
+    STARS.push({ x: Math.random(), y: Math.random()*0.55, s: Math.random()<0.3?2:1 });
+  }
+})();
+function drawStars(horizon) {
+  ctx.fillStyle = "#ffffff";
+  for (const s of STARS) {
+    ctx.globalAlpha = 0.5 + ((s.x*17 + s.y*13) % 0.5);
+    ctx.fillRect(Math.floor(s.x*W), Math.floor(s.y*horizon), s.s, s.s);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* Sol grande com halo pixelado */
+function drawSun(stage, horizon) {
+  const sunX = Math.floor(W*0.78);
+  const sunY = Math.floor(horizon*0.42);
+  const sunR = Math.max(18, Math.min(W,H)*0.055);
+  // Halo em blocos (estilo SNES)
+  const haloColors = ["rgba(255,240,180,0.18)","rgba(255,220,140,0.28)","rgba(255,200,100,0.42)"];
+  for (let i=haloColors.length;i>0;i--) {
+    ctx.fillStyle = haloColors[i-1];
+    const r = sunR * (2 + i*1.4);
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, r, 0, Math.PI*2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#fffbe0";
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunR, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(sunX - sunR*0.2, sunY - sunR*0.2, sunR*0.55, 0, Math.PI*2);
+  ctx.fill();
+}
+
+/* Nuvens chunky SNES */
+function drawClouds(horizon, p) {
+  const scroll = menuTime*8 + p.dist*0.25;
+  for (let i=0;i<7;i++) {
+    const baseX = (i*280 + menuTime*14 - scroll*0.4) % (W+400);
+    const x = baseX < -200 ? baseX + W + 400 : baseX;
+    const y = 30 + (i%3)*42;
+    // Sombra da nuvem
+    ctx.fillStyle = "rgba(180,200,230,0.55)";
+    const w = 70 + (i%4)*22;
+    ctx.beginPath();
+    ctx.ellipse(x, y+6, w, 14, 0, 0, Math.PI*2);
+    ctx.ellipse(x+w*0.55, y+8, w*0.7, 12, 0, 0, Math.PI*2);
+    ctx.fill();
+    // Topo claro
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.beginPath();
+    ctx.ellipse(x, y, w, 14, 0, 0, Math.PI*2);
+    ctx.ellipse(x+w*0.55, y+2, w*0.7, 12, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+/* Montanhas silhueta em camadas (clássico Top Gear) */
+function drawMountains(stage, horizon, p) {
+  // Camada traseira
+  const scroll1 = (p.dist*0.10 + menuTime*1.2) % 400;
+  ctx.fillStyle = stage.mountain;
+  const sp1 = 170;
+  for (let i=-1;i<Math.ceil(W/sp1)+2;i++) {
+    const idx = i + Math.floor(scroll1/sp1);
+    const x = i*sp1 - (scroll1%sp1);
+    const seed = Math.abs(Math.sin(idx*3.7 + 0.3));
+    const h = 50 + seed*70;
+    const w = sp1 * (1 + seed*0.2);
+    ctx.beginPath();
+    ctx.moveTo(x - 10, horizon);
+    ctx.lineTo(x + w*0.35, horizon - h*0.85);
+    ctx.lineTo(x + w*0.5, horizon - h);
+    ctx.lineTo(x + w*0.65, horizon - h*0.85);
+    ctx.lineTo(x + w + 10, horizon);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Camada frontal (mais escura, menor)
+  const scroll2 = (p.dist*0.22 + menuTime*2.4) % 320;
+  ctx.fillStyle = stage.mountain2;
+  const sp2 = 130;
+  for (let i=-1;i<Math.ceil(W/sp2)+2;i++) {
+    const idx = i + Math.floor(scroll2/sp2);
+    const x = i*sp2 - (scroll2%sp2);
+    const seed = Math.abs(Math.sin(idx*5.1 + 1.2));
+    const h = 30 + seed*50;
+    const w = sp2 * (1 + seed*0.15);
+    ctx.beginPath();
+    ctx.moveTo(x - 8, horizon);
+    ctx.lineTo(x + w*0.4, horizon - h*0.9);
+    ctx.lineTo(x + w*0.5, horizon - h);
+    ctx.lineTo(x + w*0.6, horizon - h*0.9);
+    ctx.lineTo(x + w + 8, horizon);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Linha fina de horizonte
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, horizon - 1, W, 2);
+}
+
+/* Prédios com janelas acesas (parallax intermediário) */
+function drawBuildings(stage, horizon, p) {
+  const scroll = p.dist * 0.45;
+  const spacing = 92;
+  const color = stage.building;
+  const dark = shadeColor(color, -25);
+  const light = shadeColor(color, 10);
+
+  for (let i=-1;i<Math.ceil(W/spacing)+2;i++) {
+    const idx = i + Math.floor(scroll/spacing);
+    const x = i*spacing - (scroll%spacing);
+    const seed = Math.abs(Math.sin(idx*2.3 + 0.7));
+    const bw = 60 + seed*30;
+    const bh = 45 + seed*75;
+    const y = horizon - bh*0.7;
+
+    // Corpo do prédio
+    ctx.fillStyle = color;
+    ctx.fillRect(x+8, y, bw, bh);
+    // Sombra lateral
+    ctx.fillStyle = dark;
+    ctx.fillRect(x+bw-4, y, 4, bh);
+    // Topo
+    ctx.fillStyle = light;
+    ctx.fillRect(x+6, y-4, bw+4, 5);
+    // Janelas
+    ctx.fillStyle = "rgba(255,240,150,0.75)";
+    for (let wy=y+8; wy<y+bh-8; wy+=12) {
+      for (let wx=x+14; wx<x+8+bw-10; wx+=12) {
+        if ((wx+wy+idx)%3 !== 0) ctx.fillRect(wx, wy, 4, 5);
+      }
+    }
+  }
+}
+
+/* Chão — cor flat com sutil faixa SNES */
+function drawGround(stage, horizon, p) {
+  ctx.fillStyle = stage.ground;
+  ctx.fillRect(0, horizon, W, H-horizon);
+  // Segunda faixa mais escura
+  ctx.fillStyle = stage.ground2;
+  ctx.fillRect(0, horizon, W, Math.max(8, (H-horizon)*0.15));
+}
+
+/* Pista — asfalto escuro com linhas brancas finas + marcadores coloridos */
+function drawRoad(stage, p, horizon, roadBottom) {
+  const STRIPS = W < 700 ? 110 : 150;
+  let prev = null;
+
+  for (let i=0;i<=STRIPS;i++) {
+    const t = i/STRIPS;
+    const d = (1-t)*(1-t)*VIEW_DISTANCE;
+    const dist = p.dist + d;
+
+    const baseY = horizon + (roadBottom-horizon)*t;
+    const camElev = elevationAt(p.dist);
+    const worldElev = elevationAt(dist);
+    const y = baseY - (worldElev-camElev)*t*0.8;
+
+    const half = 18 + W*0.46*t*t;
+    const curveOff = (centerAt(dist) - centerAt(p.dist)) * half;
+    const camOff = -p.x * half;
+    const cx = W/2 + curveOff + camOff;
+
+    const seg = {y, half, cx, t, dist};
+
+    if (prev) {
+      // Asfalto alternado (efeito de rolagem SNES)
+      const shade = Math.floor(dist/3) % 2;
+      ctx.fillStyle = shade ? stage.road : stage.roadAlt;
+      ctx.beginPath();
+      ctx.moveTo(prev.cx - prev.half, prev.y);
+      ctx.lineTo(prev.cx + prev.half, prev.y);
+      ctx.lineTo(seg.cx + seg.half, seg.y);
+      ctx.lineTo(seg.cx - seg.half, seg.y);
+      ctx.closePath();
+      ctx.fill();
+
+      if (t > 0.015) {
+        // Marcadores coloridos na borda externa (vermelho/branco alternado)
+        const markerW = Math.max(1, seg.half * 0.028);
+        const isRed = Math.floor(dist/6) % 2 === 0;
+        ctx.fillStyle = isRed ? "#d63a3a" : "#ffffff";
+        // Esquerda externa
+        ctx.beginPath();
+        ctx.moveTo(prev.cx - prev.half, prev.y);
+        ctx.lineTo(prev.cx - prev.half + markerW, prev.y);
+        ctx.lineTo(seg.cx - seg.half + markerW, seg.y);
+        ctx.lineTo(seg.cx - seg.half, seg.y);
+        ctx.closePath();
+        ctx.fill();
+        // Direita externa
+        ctx.beginPath();
+        ctx.moveTo(prev.cx + prev.half - markerW, prev.y);
+        ctx.lineTo(prev.cx + prev.half, prev.y);
+        ctx.lineTo(seg.cx + seg.half, seg.y);
+        ctx.lineTo(seg.cx + seg.half - markerW, seg.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Linhas brancas sólidas (internas)
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = Math.max(1.5, t*4);
+        ctx.beginPath();
+        ctx.moveTo(prev.cx - prev.half + markerW*2, prev.y);
+        ctx.lineTo(seg.cx - seg.half + markerW*2, seg.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(prev.cx + prev.half - markerW*2, prev.y);
+        ctx.lineTo(seg.cx + seg.half - markerW*2, seg.y);
+        ctx.stroke();
+      }
+
+      // Faixa tracejada central
+      const dashOn = Math.floor(dist/4) % 2 === 0;
+      if (dashOn && t > 0.015) {
+        ctx.fillStyle = "#ffffff";
+        const lw = Math.max(1, seg.half*0.02);
+        ctx.beginPath();
+        ctx.moveTo(prev.cx - lw, prev.y);
+        ctx.lineTo(prev.cx + lw, prev.y);
+        ctx.lineTo(seg.cx + lw, seg.y);
+        ctx.lineTo(seg.cx - lw, seg.y);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    prev = seg;
+  }
+}
+
+/* Palmeira pixel-art */
+function drawPalm(x, y, scale, trunkColor, leafColor) {
+  if (scale <= 0.02) return;
+  ctx.save();
+  ctx.translate(Math.floor(x), Math.floor(y));
+  ctx.scale(scale, scale);
+
+  // Sombra
+  ctx.fillStyle = "rgba(0,0,0,0.4)";
+  ctx.fillRect(-10, -2, 20, 4);
+
+  // Tronco
+  ctx.fillStyle = trunkColor || "#5a3a1a";
+  ctx.fillRect(-2, -52, 4, 52);
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.fillRect(-2, -52, 1, 52);
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-2.5, -52, 5, 52);
+
+  // Folhas (triângulos)
+  const lc = leafColor || "#1a6a1a";
+  const dark = shadeColor(lc, -30);
+  const fronds = [
+    {dx:-22, dy:-6}, {dx:-18, dy:-18}, {dx:-8, dy:-26},
+    {dx:8, dy:-26}, {dx:18, dy:-18}, {dx:22, dy:-6}
+  ];
+  // Folhas traseiras (mais escuras)
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(0, -50);
+  ctx.lineTo(-20, -46);
+  ctx.lineTo(0, -54);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0, -50);
+  ctx.lineTo(20, -46);
+  ctx.lineTo(0, -54);
+  ctx.closePath();
+  ctx.fill();
+  // Folhas frontais
+  for (const f of fronds) {
+    ctx.fillStyle = lc;
+    ctx.beginPath();
+    ctx.moveTo(-1, -50);
+    ctx.lineTo(f.dx, -50 + f.dy);
+    ctx.lineTo(-1, -54);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Folha central superior
+  ctx.fillStyle = lc;
+  ctx.beginPath();
+  ctx.moveTo(0, -50);
+  ctx.lineTo(-5, -70);
+  ctx.lineTo(0, -72);
+  ctx.lineTo(5, -70);
+  ctx.closePath();
+  ctx.fill();
+  // Brilho
+  ctx.fillStyle = shadeColor(lc, 25);
+  ctx.beginPath();
+  ctx.moveTo(0, -54);
+  ctx.lineTo(-3, -66);
+  ctx.lineTo(0, -68);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* Roadside — palmeiras espaçadas */
+function drawRoadside(stage, p, horizon, roadBottom) {
+  const INTERVAL = 20;
+  const startDist = Math.floor(p.dist/INTERVAL)*INTERVAL - 40;
+  const endDist = p.dist + VIEW_DISTANCE;
+
+  for (let d=startDist; d<endDist; d+=INTERVAL) {
+    const idx = Math.round(d/INTERVAL);
+    const side = (idx % 2 === 0) ? -1 : 1;
+    const relD = d - p.dist;
+    if (relD < 5 || relD > VIEW_DISTANCE) continue;
+
+    const t = 1 - Math.sqrt(relD/VIEW_DISTANCE);
+    const y = horizon + (roadBottom-horizon)*t;
+    const half = 18 + W*0.46*t*t;
+    const center = W/2 + (centerAt(d) - centerAt(p.dist) - p.x)*half;
+    const x = center + side * 1.35 * half;
+    const scale = 0.15 + t*1.15;
+
+    drawPalm(x, y, scale*1.3, stage.treeTrunk, stage.treeLeaf);
+  }
+}
+
+/* Sprites — obstáculos, estações, IA (ordem por distância) */
+function drawSprites(horizon, roadBottom) {
+  const drawables = [];
+  game.stations.forEach(st => { if (!st.used) drawables.push({kind:"station", dist:st.dist, lane:st.lane, data:st}); });
+  game.obstacles.forEach(ob => { if (!ob.hit) drawables.push({kind:"obstacle", dist:ob.dist, lane:ob.lane, data:ob}); });
+  game.ai.forEach(a => drawables.push({kind:"ai", dist:a.dist, lane:a.lane, data:a}));
+  drawables.sort((a,b)=>b.dist - a.dist);
+
+  for (const d of drawables) {
+    const pr = projectObject(d.dist, d.lane, horizon, roadBottom);
+    if (!pr) continue;
+    if (d.kind === "station") drawStation(pr.x, pr.y, pr.scale, d.data);
+    else if (d.kind === "obstacle") drawObstacle(pr.x, pr.y, pr.scale, d.data.type);
+    else drawCart(pr.x, pr.y, pr.scale*0.88, d.data.color, d.data.type, d.data.lane*0.1, d.data.wheelPhase, false);
+  }
+}
+
+/* ============================================================
+   SPRITES — cart estilo pixel com contorno preto
+   ============================================================ */
+function drawCart(x, y, scale, color, type, lean=0, wheelPhase=0, boost=false) {
+  if (scale <= 0.02) return;
+  ctx.save();
+  ctx.translate(Math.floor(x), Math.floor(y));
+  ctx.scale(scale, scale);
+  ctx.rotate(lean * 0.22);
+
+  // Sombra preta pura (Top Gear style)
+  ctx.fillStyle = "rgba(0,0,0,0.55)";
+  ctx.fillRect(-42, 16, 84, 6);
+
+  // Rodas (com contorno preto)
+  const wheels = [-30, 30];
+  for (const wx of wheels) {
+    ctx.save();
+    ctx.translate(wx, 16);
+    ctx.rotate(wheelPhase * (wx > 0 ? 1 : -1));
+    // Roda
+    ctx.fillStyle = "#0a0a0a";
+    ctx.beginPath(); ctx.arc(0,0,11,0,Math.PI*2); ctx.fill();
+    // Aro
+    ctx.fillStyle = "#b8c2cf";
+    ctx.beginPath(); ctx.arc(0,0,5.5,0,Math.PI*2); ctx.fill();
+    // Raio central
+    ctx.fillStyle = "#2a2a2a";
+    ctx.beginPath(); ctx.arc(0,0,2,0,Math.PI*2); ctx.fill();
+    // Cruz do raio
+    ctx.strokeStyle = "#2a2a2a";
+    ctx.lineWidth = 1.5;
+    for (let i=0;i<4;i++) {
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(i*Math.PI/2)*6.5, Math.sin(i*Math.PI/2)*6.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Alça (arco superior) — contorno preto grosso
+  ctx.strokeStyle = "#0a0a0a";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-34,-29); ctx.lineTo(-40,-48);
+  ctx.lineTo(40,-48); ctx.lineTo(34,-29);
+  ctx.stroke();
+  // Alça interna (metal claro)
+  ctx.strokeStyle = "#8a96a5";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-35,-32); ctx.lineTo(-39,-46);
+  ctx.lineTo(39,-46); ctx.lineTo(35,-32);
+  ctx.stroke();
+  // Barra horizontal da alça
+  ctx.strokeStyle = "#0a0a0a";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(-37,-36); ctx.lineTo(37,-36);
+  ctx.stroke();
+
+  // Formato do cesto
+  let topW = 42, botW = 32, topY = -28, botY = 15;
+  if (type === "esportivo") { topW = 46; botW = 30; }
+  if (type === "reforcado") { topW = 44; botW = 35; }
+  if (type === "leve") { topW = 38; botW = 29; }
+
+  // Corpo do cesto (contorno preto + cor)
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-topW, topY); ctx.lineTo(topW, topY);
+  ctx.lineTo(botW, botY); ctx.lineTo(-botW, botY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#0a0a0a";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Grade (linhas verticais)
+  ctx.strokeStyle = "rgba(0,0,0,0.55)";
+  ctx.lineWidth = 1.5;
+  for (let i=-3;i<=3;i++) {
+    const xx = i*10;
+    ctx.beginPath();
+    ctx.moveTo(xx*topW/40, topY+3);
+    ctx.lineTo(xx*botW/32, botY-3);
+    ctx.stroke();
+  }
+  // Grade (linhas horizontais)
+  for (let j=1;j<=3;j++) {
+    const yy = topY + (botY-topY)*(j/4);
+    const w = lerp(topW, botW, j/4);
+    ctx.beginPath();
+    ctx.moveTo(-w+3, yy); ctx.lineTo(w-3, yy);
+    ctx.stroke();
+  }
+
+  // Highlight claro no cesto
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
+  ctx.beginPath();
+  ctx.moveTo(-topW+8, topY+5);
+  ctx.lineTo(-6, topY+5);
+  ctx.lineTo(-12, botY-6);
+  ctx.lineTo(-botW+8, botY-6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Borda superior branca (barra metálica)
+  ctx.fillStyle = "#e8edf2";
+  ctx.fillRect(-topW-3, topY-5, topW*2+6, 7);
+  ctx.strokeStyle = "#0a0a0a";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-topW-3, topY-5, topW*2+6, 7);
+
+  // Emblema "JA"
+  ctx.fillStyle = "#0d1a2b";
+  ctx.beginPath(); ctx.arc(0,-4,7.5,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#0a0a0a";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0,-4,7.5,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "#ffd24a";
+  ctx.font = "bold 9px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("JA", 0, -4);
+
+  // Chamas do impulso (blocos)
+  if (boost) {
+    const flick = Math.random();
+    ctx.fillStyle = "#ffd24a";
+    ctx.beginPath();
+    ctx.moveTo(-20,22); ctx.lineTo(-10,38+flick*10); ctx.lineTo(0,24);
+    ctx.lineTo(10,38+flick*10); ctx.lineTo(20,22);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#ff7a3d";
+    ctx.beginPath();
+    ctx.moveTo(-9,23); ctx.lineTo(0,32+flick*6); ctx.lineTo(9,23);
+    ctx.closePath(); ctx.fill();
+    // Pontinha branca
+    ctx.fillStyle = "#fff8d0";
+    ctx.fillRect(-3, 28+flick*4, 6, 4);
+  }
+
+  ctx.restore();
+}
+
+function drawObstacle(x, y, scale, type) {
+  if (scale <= 0.02) return;
+  ctx.save();
+  ctx.translate(Math.floor(x), Math.floor(y));
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.beginPath(); ctx.ellipse(0,9,26,7,0,0,Math.PI*2); ctx.fill();
+
+  if (type === "crate") {
+    ctx.fillStyle = "#b07a3d";
+    ctx.fillRect(-22,-24,44,34);
+    ctx.strokeStyle = "#0a0a0a"; ctx.lineWidth = 3;
+    ctx.strokeRect(-22,-24,44,34);
+    ctx.strokeStyle = "#4a2f17"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-22,-24); ctx.lineTo(22,10); ctx.moveTo(22,-24); ctx.lineTo(-22,10); ctx.stroke();
+    ctx.fillStyle = "#d9a45c"; ctx.fillRect(-18,-20,36,5);
+    ctx.strokeStyle = "#0a0a0a"; ctx.strokeRect(-18,-20,36,5);
+  } else {
+    ctx.fillStyle = "#ff7a3d";
+    ctx.beginPath(); ctx.moveTo(0,-28); ctx.lineTo(18,10); ctx.lineTo(-18,10); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "#0a0a0a"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.fillRect(-14,-6,28,6);
+    ctx.strokeStyle = "#0a0a0a"; ctx.strokeRect(-14,-6,28,6);
+  }
+  ctx.restore();
+}
+
+function drawStation(x, y, scale, data) {
+  if (scale <= 0.02) return;
+  ctx.save();
+  ctx.translate(Math.floor(x), Math.floor(y));
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = data.used ? 0.4 : 1;
+  ctx.fillStyle = "rgba(0,0,0,0.4)";
+  ctx.beginPath(); ctx.ellipse(0,12,38,10,0,0,Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = data.used ? "#5d6b7a" : "#27ae60";
+  ctx.fillRect(-34,-40,10,52);
+  ctx.fillRect(24,-40,10,52);
+  ctx.strokeStyle = "#0a0a0a"; ctx.lineWidth = 2;
+  ctx.strokeRect(-34,-40,10,52);
+  ctx.strokeRect(24,-40,10,52);
+
+  ctx.fillStyle = data.used ? "#43505e" : "#48e08b";
+  ctx.fillRect(-34,-48,68,12);
+  ctx.strokeStyle = "#0a0a0a"; ctx.strokeRect(-34,-48,68,12);
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 10px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("ENERGIA", 0, -42);
+
+  ctx.fillStyle = data.used ? "#6b7785" : "#ffd24a";
+  ctx.beginPath(); ctx.arc(0,-8,12,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#0a0a0a"; ctx.stroke();
+
+  ctx.fillStyle = "#12202e";
+  ctx.font = "bold 14px monospace";
+  ctx.fillText("⚡", 0, -7);
+  ctx.restore();
+}
+
+/* ============================================================
+   EFEITOS DE VELOCIDADE — vinheta + boost glow
+   ============================================================ */
+function drawSpeedEffects(p, speedRatio) {
+  // Vinheta
+  const vigStrength = 0.28 + speedRatio * 0.32;
+  const vig = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.35, W/2, H/2, Math.max(W,H)*0.75);
+  vig.addColorStop(0, "rgba(0,0,0,0)");
+  vig.addColorStop(1, `rgba(0,0,0,${vigStrength})`);
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+
+  // Boost glow
+  if (p.boostActive) {
+    const glow = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.8);
+    glow.addColorStop(0, "rgba(255,210,74,0)");
+    glow.addColorStop(1, "rgba(255,210,74,0.32)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+/* ============================================================
+   DESENHO PRINCIPAL
+   ============================================================ */
+function draw() {
+  if (!game.stage || !game.player) return;
+  const stage = game.stage;
+  const p = game.player;
+  const horizon = H * 0.42;
+  const roadBottom = H * 0.96;
+
+  const speedRatio = clamp(p.speed / game.cart.maxSpeed, 0, 1.3);
+  const shakeBase = p.boostActive ? 3.0 : (speedRatio > 0.82 ? (speedRatio - 0.82) * 8 : 0);
+  const shakeX = (Math.random() - 0.5) * shakeBase;
+  const shakeY = (Math.random() - 0.5) * shakeBase;
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
+  drawSky(stage, horizon);
+  if (stage.hasStars) drawStars(horizon);
+  drawSun(stage, horizon);
+  drawClouds(horizon, p);
+  drawMountains(stage, horizon, p);
+  drawBuildings(stage, horizon, p);
+  drawGround(stage, horizon, p);
+  drawRoad(stage, p, horizon, roadBottom);
+  drawRoadside(stage, p, horizon, roadBottom);
+  drawSprites(horizon, roadBottom);
+
+  // Jogador
+  const baseScale = Math.min(W/900, H/700) * 1.35;
+  drawCart(W/2 + p.lean*18, H*0.915, baseScale, game.cart.color, game.cart.type, p.lean, p.wheelPhase, p.boostActive);
+
+  // Partículas
+  for (const pt of game.particles) {
+    const alpha = clamp(pt.life/pt.max, 0, 1);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = pt.color;
+    ctx.fillRect(pt.x, pt.y, 3, 3);
+  }
+  ctx.globalAlpha = 1;
+
+  drawSpeedEffects(p, speedRatio);
+  ctx.restore();
+
+  drawHUD();
+
+  if (game.flash > 0) {
+    ctx.fillStyle = `rgba(255,50,50,${game.flash*0.28})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  if (game.state === "menu" || game.state === "quiz" || game.state === "paused" ||
+      game.state === "stageComplete" || game.state === "results") {
+    ctx.fillStyle = "rgba(3,8,18,.35)";
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+/* ============================================================
+   HUD — tipografia chunky estilo SNES
+   ============================================================ */
+function drawHUD() {
+  const p = game.player;
+  const answered = game.missionResults.filter(Boolean).length;
+  const correct = game.missionResults.filter(r => r && r.correct).length;
+  const stage = game.stage;
+
+  // Função auxiliar: texto com contorno preto
+  function strokeText(txt, x, y, color, size, align="left") {
+    ctx.textAlign = align;
+    ctx.textBaseline = "alphabetic";
+    ctx.font = `bold ${size}px "Courier New", monospace`;
+    ctx.lineWidth = Math.max(2, Math.floor(size/6));
+    ctx.strokeStyle = "#000000";
+    ctx.lineJoin = "round";
+    ctx.strokeText(txt, x, y);
+    ctx.fillStyle = color;
+    ctx.fillText(txt, x, y);
+  }
+
+  // Faixa escura superior
+  ctx.fillStyle = "rgba(4,10,20,.72)";
+  ctx.fillRect(0, 0, W, 78);
+  ctx.strokeStyle = "rgba(90,140,210,.55)";
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, 78); ctx.lineTo(W, 78); ctx.stroke();
+
+  const sizeSmall = Math.max(11, Math.min(15, W*0.014));
+  const sizeMed = Math.max(14, Math.min(20, W*0.018));
+  const sizeBig = Math.max(26, Math.min(46, W*0.038));
+
+  // Linha 1: etapa + tempo + posição
+  strokeText(stage.subtitle, 14, 22, "#ffd24a", sizeSmall, "left");
+  strokeText(`TEMPO ${formatTime(game.stageTime)}`, W/2, 22, "#ffffff", sizeMed, "center");
+  strokeText(`${p.pos}º LUGAR`, W-14, 22, "#ffd24a", sizeMed, "right");
+
+  // Linha 2: velocidade grande (esquerda) + progresso (centro) + pontos (direita)
+  strokeText(String(Math.round(p.speed)), 14, 66, "#ffffff", sizeBig, "left");
+  const speedLabelX = 14 + (sizeBig * 0.6 * String(Math.round(p.speed)).length) + 8;
+  strokeText("km/h", speedLabelX, 66, "#a9c1e0", sizeSmall, "left");
+
+  const progPct = Math.min(100, Math.round((p.dist / stage.length) * 100));
+  strokeText(`VOLTA ${progPct}%`, W/2, 52, "#cfe3ff", sizeSmall, "center");
+
+  // Barra de progresso central
+  const progW = Math.min(280, W*0.32);
+  const progX = W/2 - progW/2;
+  const progY = 62;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(progX, progY, progW, 8);
+  ctx.strokeStyle = "#5a8bc9";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(progX, progY, progW, 8);
+  ctx.fillStyle = "#ffd24a";
+  ctx.fillRect(progX+1, progY+1, (progW-2) * clamp(p.dist/stage.length, 0, 1), 6);
+
+  // Direita: pontos + missões
+  strokeText(`PONTOS ${Math.round(game.score)}`, W-14, 44, "#ffffff", sizeSmall, "right");
+  strokeText(`MISSÕES ${answered}/8`, W-14, 62, "#a9c1e0", sizeSmall, "right");
+
+  // Barra de energia (vertical, estilo fuel gauge Top Gear) na borda direita
+  const fuelW = 12;
+  const fuelH = Math.min(160, H*0.22);
+  const fuelX = W - fuelW - 14;
+  const fuelY = H - fuelH - 40;
+  ctx.fillStyle = "rgba(0,0,0,.75)";
+  ctx.fillRect(fuelX, fuelY, fuelW, fuelH);
+  ctx.strokeStyle = "#5a8bc9";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(fuelX, fuelY, fuelW, fuelH);
+
+  // Preenchimento (base para cima)
+  const fillH = (fuelH-4) * (p.energy/100);
+  const energyGrad = ctx.createLinearGradient(0, fuelY+fuelH, 0, fuelY);
+  energyGrad.addColorStop(0, "#48e08b");
+  energyGrad.addColorStop(0.5, "#ffd24a");
+  energyGrad.addColorStop(1, "#ff6b6b");
+  ctx.fillStyle = energyGrad;
+  ctx.fillRect(fuelX+2, fuelY + fuelH - fillH - 2, fuelW-4, fillH);
+
+  // Marcações da barra
+  ctx.strokeStyle = "rgba(255,255,255,.25)";
+  ctx.lineWidth = 1;
+  for (let i=1;i<4;i++) {
+    const yy = fuelY + (fuelH/4)*i;
+    ctx.beginPath(); ctx.moveTo(fuelX+2, yy); ctx.lineTo(fuelX+fuelW-2, yy); ctx.stroke();
+  }
+
+  // Rótulo "ENERGIA"
+  ctx.save();
+  ctx.translate(fuelX + fuelW/2, fuelY - 6);
+  ctx.font = "bold 10px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#000";
+  ctx.strokeText("ENERGIA", 0, 0);
+  ctx.fillStyle = "#ffd24a";
+  ctx.fillText("ENERGIA", 0, 0);
+  ctx.restore();
+}
+
+/* ============================================================
+   CONTROLES (inalterados)
+   ============================================================ */
+addEventListener("keydown", e => {
+  const k = e.key;
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," ","Escape","w","a","s","d","W","A","S","D"].includes(k)) {
+    e.preventDefault();
+  }
+  if (k === "Escape") {
+    if (game.state === "racing") {
+      game.state = "paused"; game.paused = true;
+      showScreen("pauseScreen"); showControls(false);
+    } else if (game.state === "paused") {
+      game.state = "racing"; game.paused = false;
+      showScreen(null); showControls(true);
+    }
+    return;
+  }
+  if (game.state === "quiz") return;
+  game.keys[k] = true;
+  if (k === " " && game.state === "racing") AudioSys.sfx("boost");
+});
+addEventListener("keyup", e => { game.keys[e.key] = false; });
+
+function bindTouch(id, prop) {
+  const el = document.getElementById(id);
+  const on = e => { e.preventDefault(); game.touch[prop] = true; AudioSys.init(); };
+  const off = e => { e.preventDefault(); game.touch[prop] = false; };
+  el.addEventListener("pointerdown", on);
+  el.addEventListener("pointerup", off);
+  el.addEventListener("pointerleave", off);
+  el.addEventListener("pointercancel", off);
+}
+bindTouch("tLeft","left"); bindTouch("tRight","right");
+bindTouch("tAccel","accel"); bindTouch("tBrake","brake"); bindTouch("tBoost","boost");
+
+/* ============================================================
+   MENUS (inalterados)
+   ============================================================ */
+document.getElementById("btnNewGame").addEventListener("click", () => {
+  AudioSys.init(); AudioSys.startMusic();
+  resetCampaign(); showCartSelect();
+});
+document.getElementById("btnContinueGame").addEventListener("click", () => {
+  AudioSys.init(); AudioSys.startMusic();
+  if (!loadSave()) alert("Nenhum progresso salvo encontrado. Inicie uma nova campanha.");
+});
+document.getElementById("btnInstructions").addEventListener("click", () => showScreen("instructionsScreen"));
+document.getElementById("btnInstructionsBack").addEventListener("click", () => showScreen("titleScreen"));
+document.getElementById("btnStartStage").addEventListener("click", () => startStage(game.stageIndex));
+document.getElementById("quizSubmit").addEventListener("click", submitQuiz);
+document.getElementById("quizContinue").addEventListener("click", continueQuiz);
+document.getElementById("btnResume").addEventListener("click", () => {
+  game.state = "racing"; game.paused = false;
+  showScreen(null); showControls(true);
+});
+document.getElementById("btnRestartStage").addEventListener("click", () => {
+  const stage = STAGES[game.stageIndex];
+  stage.missions.forEach(mi => { game.missionResults[mi] = null; });
+  game.finishPending = false;
+  game.state = "racing"; game.paused = false;
+  showScreen(null); startStage(game.stageIndex);
+});
+document.getElementById("btnQuit").addEventListener("click", () => {
+  game.state = "menu"; game.paused = false;
+  showControls(false); initMenuScene(); showScreen("titleScreen");
+});
+document.getElementById("btnNextStage").addEventListener("click", () => {
+  if (game.stageIndex < STAGES.length-1) {
+    game.stageIndex++; showStageIntro(game.stageIndex);
+  } else showResults();
+});
+document.getElementById("btnReplay").addEventListener("click", () => {
+  resetCampaign(); showCartSelect();
+});
+document.getElementById("btnBackTitle").addEventListener("click", () => {
+  game.state = "menu"; initMenuScene(); showScreen("titleScreen");
+});
+document.getElementById("muteBtn").addEventListener("click", () => {
+  AudioSys.init();
+  AudioSys.setMuted(!AudioSys.muted);
+  document.getElementById("muteBtn").textContent = AudioSys.muted ? "🔇" : "🔊";
+});
+
+/* ============================================================
+   LOOP (inalterado)
+   ============================================================ */
+function loop(now) {
+  const dt = Math.min(0.05, (now-lastTime)/1000 || 0);
+  lastTime = now;
+  menuTime += dt;
+
+  if (game.state === "racing") update(dt);
+  else if (game.state === "menu" || game.state === "results" || game.state === "stageComplete") {
+    for (const pt of game.particles) {
+      pt.x += pt.vx*dt; pt.y += pt.vy*dt; pt.vy += 160*dt; pt.life -= dt;
+    }
+    game.particles = game.particles.filter(pt => pt.life > 0);
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+document.getElementById("btnContinueGame").style.display = hasSave() ? "inline-block" : "none";
+setInterval(() => {
+  document.getElementById("btnContinueGame").style.display = hasSave() ? "inline-block" : "none";
+}, 1500);
+
+showScreen("titleScreen");
+showControls(false);
+</script>
+</body>
+</html>
